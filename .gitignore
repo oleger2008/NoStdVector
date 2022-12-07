@@ -3,4 +3,6 @@ Debug/
 
 # ignore folder Release
 Release/
+**/.idea
+**/cmake-build-debug/
 
