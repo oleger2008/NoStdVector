@@ -9,67 +9,190 @@
 #include <new>
 #include <utility>
 
+/**
+ * @brief Вектор. Контейнер для элементов типа, указанного в шаблонном параметре.
+ * Располагает элементы последовательно в линейном участке памяти. Вместимость
+ * вектора может меняться.
+ * @tparam T Тип элемента вектора.
+ */
 template <typename T>
 class Vector {
 public:
-    using iterator = T*;
-    using const_iterator = const T*;
+    using iterator = T *; //!< Итератор.
+    using const_iterator = const T *; //!< Константный итератор.
 
+    /**
+     * @brief Получить итератор на начало вектора.
+     * @details Даёт строгую гарантию безопасности.
+     * @return итератор на начало вектора.
+     */
     iterator begin() noexcept;
-    iterator end() noexcept;
+
+    //! @overload Vector::begin()
     const_iterator begin() const noexcept;
-    const_iterator end() const noexcept;
+
+    //! @overload Vector::begin()
     const_iterator cbegin() const noexcept;
+
+    /**
+     * @brief Получить итератор на конец вектора.
+     * @details Даёт строгую гарантию безопасности.
+     * @return итератор на конец вектора.
+     */
+    iterator end() noexcept;
+
+    //! @overload Vector::end()
+    const_iterator end() const noexcept;
+
+    //! @overload Vector::end()
     const_iterator cend() const noexcept;
 
-    
+    /**
+     * @brief Конструирует пустой вектор.
+     */
     Vector() = default;
 
+    /**
+     * @brief Конструирует вектор с указанным количеством элементов.
+     * @param size Количество элементов.
+     */
     explicit Vector(size_t size);
 
-    Vector(const Vector& other);
-    
-    Vector(Vector&& other) noexcept;
-
-    Vector& operator=(const Vector& rhs);
-    Vector& operator=(Vector&& rhs) noexcept;
-
-    void Swap(Vector& other) noexcept;
-
+    /**
+     * @brief Деструктор.
+     * @details Освобождает
+     */
     ~Vector();
 
+    /**
+     * @brief Конструирует объект, копируя переданный.
+     * @param other Объект для копирования.
+     */
+    Vector(const Vector &other);
+
+    /**
+     * @brief Конструирует объект, перемещая себе содержимого переданного.
+     * @param other Объект для перемещения.
+     */
+    Vector(Vector&& other) noexcept;
+
+    /**
+     * @brief Присваивает объект, копируя себе содержимое переданного.
+     * @param rhs Объект для копирования.
+     * @return текущий объект.
+     */
+    Vector& operator=(const Vector &rhs);
+
+    /**
+     * @brief Присваивает объект, перемещая себе содержимое переданного.
+     * @param rhs Объект для перемещения.
+     * @return текущий объект.
+     */
+    Vector& operator=(Vector&& rhs) noexcept;
+
+    /**
+     * @brief Меняет местами содержимое текущего объекта с содержимым переданного.
+     * @param other Объект, с которым нужно поменяться содержимым.
+     */
+    void Swap(Vector& other) noexcept;
+
+    /**
+     * @brief Резервирует место под указанное количество элементов.
+     * @param new_capacity Новая вместимость вектора.
+     */
     void Reserve(size_t new_capacity);
 
+    /**
+     * @brief Меняет размер вектора на указанный.
+     * @details Если до вызова этого метода в векторе был размер больше переданного, то элементы
+     * стоящие на местах превышающих новый размер будут потеряны.
+     * Если же до вызова этого метода в векторе был размер меньше переданного, то в вектор
+     * будет дозаполнен объектами сконструированными по умолчанию.
+     * @param new_size Новый размер вектора.
+     */
     void Resize(size_t new_size);
 
+    /**
+     * @brief Вставить объект в конец вектора.
+     * @tparam Obj Тип объекта для вставки.
+     * @param value Объект для вставки.
+     */
     template <typename Obj>
     void PushBack(Obj&& value);
 
+    /**
+     * @brief Удаляет последний элемент.
+     */
     void PopBack() noexcept;
 
-    template <typename... Args>
-    T& EmplaceBack(Args&&... args);
+    /**
+     * @brief Конструирует и вставляет объект в конец вектора.
+     * @tparam Args Типы аргументов для конструирования объекта.
+     * @param args Аргументы для конструирования объекта.
+     * @return возвращает ссылку на сконструированный объект.
+     */
+    template <typename ...Args>
+    T& EmplaceBack(Args &&...args);
 
+    /**
+     * @brief Вставляет объект в вектор перед указанным элементом.
+     * @tparam Obj Тип объекта.
+     * @param pos Позиция вставки.
+     * @param value Объект для вставки.
+     * @return итератор на вставленный элемент.
+     */
     template <typename Obj>
     iterator Insert(const_iterator pos, Obj&& value);
 
+    /**
+     * @brief Конструирует и вставляет объект в вектор перед указанным элементом.
+     * @tparam Args Типы аргументов для конструирования.
+     * @param pos Позиция вставки.
+     * @param args Аргументы для конструирования.
+     * @return итератор на вставленный элемент.
+     */
     template <typename... Args>
     iterator Emplace(const_iterator pos, Args&&... args);
 
+    /**
+     * @brief Стирает элементом в указанной позиции.
+     * @param pos Позиция элемента для стирания.
+     * @return итератор на элемент стоящий после стираемого.
+     */
     iterator Erase(const_iterator pos);
 
+    /**
+     * @brief Получает размер.
+     * @return размер.
+     */
     [[nodiscard]] size_t Size() const noexcept;
 
+    /**
+     * @brief Получает вместимость.
+     * @return вместимость.
+     */
     [[nodiscard]] size_t Capacity() const noexcept;
 
-    const T& operator[](size_t index) const noexcept;
-
+    /**
+     * @brief Получает доступ к элементу по индексу.
+     * @param index Индекс элемента.
+     * @return ссылку на элемент.
+     */
     T& operator[](size_t index) noexcept;
 
-private:
-    RawMemory<T> data_;
-    size_t size_ = 0U;
+    //! @overload Vector::operator[](size_t index)
+    const T& operator[](size_t index) const noexcept;
 
+private:
+    RawMemory<T> data_; //!< Выделенная память под объекты.
+    size_t size_ = 0U; //!< Размер.
+
+    /**
+     * @brief Релоцирует элементы из одного участка памяти в другой.
+     * @param from Начало памяти откуда нужно релоцировать.
+     * @param n Количество элементов для релокации.
+     * @param to Начало памяти, в которую нужно релоцировать.
+     */
     void Reallocate(T* from, size_t n, T* to);
 };
 
@@ -200,7 +323,7 @@ template<typename T>
 template <typename... Args>
 T& Vector<T>::EmplaceBack(Args&&... args) {
     if (size_ == Capacity()) {
-        size_t new_capacity = (size_ == 0U) ? 1U : (size_ * 2U);
+        const size_t new_capacity = (size_ == 0U) ? 1U : (size_ * 2U);
         RawMemory<T> new_data(new_capacity);
         new (new_data + size_) T(std::forward<Args>(args)...);
         try {
@@ -296,7 +419,6 @@ T& Vector<T>::operator[](const size_t index) noexcept {
 
 template<typename T>
 void Vector<T>::Reallocate(T *const from, const size_t n, T *const to) {
-    // constexpr оператор if будет вычислен во время компиляции
     if constexpr (std::is_nothrow_move_constructible_v<T> || (!std::is_copy_constructible_v<T>)) {
         std::uninitialized_move_n(from, n, to);
     } else {
