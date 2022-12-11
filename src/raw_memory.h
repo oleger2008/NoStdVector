@@ -7,85 +7,108 @@
 #include <new>
 #include <utility>
 
+/**
+ * @brief Простой аллокатор памяти.
+ * @tparam T Тип объекта, который будет размещаться в памяти.
+ */
 template <typename T>
 class RawMemory {
 public:
+    /**
+     * @brief Конструирует по умолчанию объект без выделенной памяти.
+     */
     RawMemory() = default;
 
-    explicit RawMemory(size_t capacity)
-    : buffer_(Allocate(capacity))
-    , capacity_(capacity) {
-    }
+    /**
+     * @brief Конструирует объект, который выделяет память с указанной вместимостью.
+     * @param capacity Вместимость памяти.
+     */
+    explicit RawMemory(size_t capacity);
 
-    RawMemory(const RawMemory&) = delete;
-    RawMemory& operator=(const RawMemory& rhs) = delete;
+    //! Запрет на копирование.
+    RawMemory(const RawMemory &) = delete;
+    //! Запрет на копирование.
+    RawMemory &operator=(const RawMemory &rhs) = delete;
 
-    RawMemory(RawMemory&& other) noexcept
-    : buffer_(nullptr)
-    , capacity_(0) {
-        std::swap(this->buffer_, other.buffer_);
-        std::swap(this->capacity_, other.capacity_);
-    }
-    RawMemory& operator=(RawMemory&& rhs) noexcept {
-        Deallocate(buffer_);
-        this->capacity_ = 0;
-        std::swap(this->buffer_, rhs.buffer_);
-        std::swap(this->capacity_, rhs.capacity_);
-    }
+    /**
+     * @brief Конструирует объект, перемещая содержимое переданного в конструктор объекта.
+     * @param other Объект, содержимое, которого нужно переместить.
+     */
+    RawMemory(RawMemory &&other) noexcept;
 
-    ~RawMemory() {
-        Deallocate(buffer_);
-    }
+    /**
+     * @brief Присваивает значение объекта справа, перемещая его содержимое себе.
+     * @param rhs Присваиваемый объект.
+     * @return Возвращает текущий объект.
+     */
+    RawMemory &operator=(RawMemory &&rhs) noexcept;
 
-    T* operator+(size_t offset) noexcept {
-        // Разрешается получать адрес ячейки памяти, следующей за последним элементом массива
-        assert(offset <= capacity_);
-        return buffer_ + offset;
-    }
+    /**
+     * @brief Освобождает выделенную память.
+     */
+    ~RawMemory();
 
-    const T* operator+(size_t offset) const noexcept {
-        return const_cast<RawMemory&>(*this) + offset;
-    }
+    /**
+     * @brief Получает указатель на элемент, отстоящий в памяти от первого на переданное число.
+     * @param offset Отступ.
+     * @return указатель на элемент
+     */
+    T *operator+(size_t offset) noexcept;
 
-    const T& operator[](size_t index) const noexcept {
-        return const_cast<RawMemory&>(*this)[index];
-    }
+    //! @overload RawMemory::operator+(size_t offset)
+    const T *operator+(size_t offset) const noexcept;
 
-    T& operator[](size_t index) noexcept {
-        assert(index < capacity_);
-        return buffer_[index];
-    }
+    /**
+     * @brief Получает доступ к объект по индексу.
+     * @param index Индекс объекта.
+     * @return ссылку на объект.
+     */
+    T &operator[](size_t index) noexcept;
 
-    void Swap(RawMemory& other) noexcept {
-        std::swap(buffer_, other.buffer_);
-        std::swap(capacity_, other.capacity_);
-    }
+    //! @overload RawMemory::operator[](size_t index)
+    const T &operator[](size_t index) const noexcept;
 
-    const T* GetAddress() const noexcept {
-        return buffer_;
-    }
+    /**
+     * @brief Поменять местами текущее содержимое с содержимом переданного объекта.
+     * @param other Объект, с которым нужно поменять внутренним содержимым.
+     */
+    void Swap(RawMemory &other) noexcept;
 
-    T* GetAddress() noexcept {
-        return buffer_;
-    }
+    /**
+     * @brief Получает адрес начала выделенной памяти под объекты.
+     * @return адрес начала выделенной памяти под объекты.
+     */
+    T *GetAddress() noexcept;
 
-    size_t Capacity() const {
-        return capacity_;
-    }
+    //! @overload RawMemory::GetAddress()
+    const T *GetAddress() const noexcept;
+
+    /**
+     * @brief Получить вместимость хранилища объектов.
+     * @return вместимость.
+     */
+    [[nodiscard]] size_t Capacity() const;
 
 private:
-    // Выделяет сырую память под n элементов и возвращает указатель на неё
-    static T* Allocate(size_t n) {
-        return n != 0 ? static_cast<T*>(operator new(n * sizeof(T))) : nullptr;
-    }
+    T *buffer_ = nullptr; //!< Выделенная память.
+    size_t capacity_ = 0U; //!< Вместимость хранилища, т.е. сколько поместится объектов.
+
+    /**
+     * @brief Выделяет сырую память под указанное количество элементов.
+     * @param n Количество элементов.
+     * @return указатель на начало выделенной памяти.
+     */
+    static T *Allocate(size_t n);
 
     // Освобождает сырую память, выделенную ранее по адресу buf при помощи Allocate
-    static void Deallocate(T* buf) noexcept {
-        operator delete(buf);
-    }
-
-    T* buffer_ = nullptr;
-    size_t capacity_ = 0;
+    /**
+     * @brief Освобождает переданную память.
+     * @warning Предполагает, что будет передан указатель на память, которая была выделена
+     * при помощи Allocate.
+     * @see Allocate(size_t n)
+     * @param buf память, которую нужно освободить.
+     */
+    static void Deallocate(T *buf) noexcept;
 };
 
 template<typename T>
