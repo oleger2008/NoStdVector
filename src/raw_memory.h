@@ -87,3 +87,82 @@ private:
     T* buffer_ = nullptr;
     size_t capacity_ = 0;
 };
+
+template<typename T>
+RawMemory<T>::RawMemory(const size_t capacity)
+: buffer_(Allocate(capacity))
+, capacity_(capacity) {
+}
+
+template<typename T>
+RawMemory<T>::RawMemory(RawMemory &&other) noexcept
+: buffer_(nullptr)
+, capacity_(0U) {
+    std::swap(buffer_, other.buffer_);
+    std::swap(capacity_, other.capacity_);
+}
+
+template<typename T>
+RawMemory<T> &RawMemory<T>::operator=(RawMemory &&rhs) noexcept {
+    Deallocate(buffer_);
+    std::swap(buffer_, rhs.buffer_);
+    capacity_ = std::exchange(rhs.capacity_, 0U);
+}
+
+template<typename T>
+RawMemory<T>::~RawMemory() {
+    Deallocate(buffer_);
+}
+
+template<typename T>
+T *RawMemory<T>::operator+(const size_t offset) noexcept {
+    assert(offset <= capacity_);
+    return buffer_ + offset;
+}
+
+template<typename T>
+const T *RawMemory<T>::operator+(const size_t offset) const noexcept {
+    return const_cast<RawMemory &>(*this) + offset;
+}
+
+template<typename T>
+const T &RawMemory<T>::operator[](const size_t index) const noexcept {
+    return const_cast<RawMemory&>(*this)[index];
+}
+
+template<typename T>
+T &RawMemory<T>::operator[](const size_t index) noexcept {
+    assert(index < capacity_);
+    return buffer_[index];
+}
+
+template<typename T>
+void RawMemory<T>::Swap(RawMemory &other) noexcept {
+    std::swap(buffer_, other.buffer_);
+    std::swap(capacity_, other.capacity_);
+}
+
+template<typename T>
+const T *RawMemory<T>::GetAddress() const noexcept {
+    return buffer_;
+}
+
+template<typename T>
+T *RawMemory<T>::GetAddress() noexcept {
+    return buffer_;
+}
+
+template<typename T>
+size_t RawMemory<T>::Capacity() const {
+    return capacity_;
+}
+
+template<typename T>
+T *RawMemory<T>::Allocate(const size_t n) {
+    return (n != 0U) ? static_cast<T *>(operator new(n * sizeof(T))) : nullptr;
+}
+
+template<typename T>
+void RawMemory<T>::Deallocate(T *buf) noexcept {
+    operator delete(buf);
+}
